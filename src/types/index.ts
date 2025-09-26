@@ -37,3 +37,12 @@ export interface ContentStats {
   totalSources: number;
   totalCorrections: number;
 }
+
+export interface SocialStats {
+  id?: string;
+  videos: number;
+  followers: number;
+  views: number;
+  likes: number;
+  lastUpdated: string;
+}

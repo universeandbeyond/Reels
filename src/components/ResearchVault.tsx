@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { Plus, Search, Filter, ExternalLink, BookOpen, Globe, FileText, Video, Star } from 'lucide-react';
+import { useFirestoreCollection } from '../hooks/useFirestore';
 import { ResearchEntry, Source } from '../types';
 
-interface ResearchVaultProps {
-  entries: ResearchEntry[];
-  onAddEntry: (entry: Omit<ResearchEntry, 'id'>) => void;
-}
-
-export default function ResearchVault({ entries, onAddEntry }: ResearchVaultProps) {
+export default function ResearchVault() {
+  const { data: entries, loading, addItem: addEntry } = useFirestoreCollection<ResearchEntry>('research-entries');
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPlatform, setFilterPlatform] = useState('all');
@@ -40,13 +37,13 @@ export default function ResearchVault({ entries, onAddEntry }: ResearchVaultProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const entry: Omit<ResearchEntry, 'id'> = {
+    const entry = {
       ...formData,
       sources: formData.sources.map(source => ({ ...source, id: Date.now().toString() + Math.random() })),
       tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
       uploadDate: new Date().toISOString()
     };
-    onAddEntry(entry);
+    addEntry(entry);
     setFormData({
       contentNumber: '',
       title: '',
@@ -152,7 +149,12 @@ export default function ResearchVault({ entries, onAddEntry }: ResearchVaultProp
 
         {/* Entries Grid */}
         <div className="grid lg:grid-cols-2 gap-8">
-          {filteredEntries.map((entry) => (
+          {loading ? (
+            <div className="col-span-2 text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading research entries...</p>
+            </div>
+          ) : filteredEntries.map((entry) => (
             <div key={entry.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
@@ -204,11 +206,13 @@ export default function ResearchVault({ entries, onAddEntry }: ResearchVaultProp
         </div>
 
         {filteredEntries.length === 0 && (
+          !loading && (
           <div className="text-center py-12">
             <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No research entries found</h3>
             <p className="text-gray-600">Start by adding your first research entry.</p>
           </div>
+          )
         )}
 
         {/* Add Entry Modal */}

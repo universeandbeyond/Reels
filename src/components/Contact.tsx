@@ -28,32 +28,38 @@ export default function Contact() {
     {
       name: 'YouTube',
       icon: Youtube,
-      url: '#',
       color: 'text-red-600 hover:text-red-700',
       bgColor: 'bg-red-50 hover:bg-red-100'
     },
     {
       name: 'Facebook',
       icon: Facebook,
-      url: '#',
       color: 'text-blue-600 hover:text-blue-700',
       bgColor: 'bg-blue-50 hover:bg-blue-100'
     },
     {
       name: 'Instagram',
       icon: Instagram,
-      url: '#',
       color: 'text-pink-600 hover:text-pink-700',
       bgColor: 'bg-pink-50 hover:bg-pink-100'
     },
     {
       name: 'TikTok',
       icon: Video,
-      url: '#',
       color: 'text-gray-900 hover:text-gray-700',
       bgColor: 'bg-gray-50 hover:bg-gray-100'
     }
   ];
+
+  const getSocialUrl = (platform: string) => {
+    switch (platform) {
+      case 'YouTube': return 'https://youtube.com/@universeandbeyond';
+      case 'Facebook': return 'https://facebook.com/universeandbeyond';
+      case 'Instagram': return 'https://instagram.com/universeandbeyond';
+      case 'TikTok': return 'https://tiktok.com/@universeandbeyond';
+      default: return '#';
+    }
+  };
 
   return (
     <section className="py-20 bg-gray-50">
@@ -176,7 +182,7 @@ export default function Contact() {
               <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-2">Email</h4>
-                  <p className="text-gray-600">contact@universeandbeyon.com</p>
+                  <p className="text-gray-600">Universeandbeyond.reels@gmail.com</p>
                 </div>
                 
                 <div>
@@ -204,7 +210,9 @@ export default function Contact() {
                 {socialLinks.map((social) => (
                   <a
                     key={social.name}
-                    href={social.url}
+                    href={getSocialUrl(social.name)}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className={`${social.bgColor} p-4 rounded-xl transition-colors group`}
                   >
                     <div className="flex items-center space-x-3">

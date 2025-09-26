@@ -1,12 +1,11 @@
 import React from 'react';
 import { Youtube, Facebook, Instagram, Video, ExternalLink, Calendar, Tag } from 'lucide-react';
+import { useFirestoreCollection } from '../hooks/useFirestore';
 import { ResearchEntry } from '../types';
 
-interface ContentGridProps {
-  entries: ResearchEntry[];
-}
-
-export default function ContentGrid({ entries }: ContentGridProps) {
+export default function ContentGrid() {
+  const { data: entries, loading } = useFirestoreCollection<ResearchEntry>('research-entries');
+  
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
       case 'youtube': return <Youtube className="h-5 w-5 text-red-600" />;
@@ -38,7 +37,12 @@ export default function ContentGrid({ entries }: ContentGridProps) {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {entries.map((entry) => (
+          {loading ? (
+            <div className="col-span-3 text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading content...</p>
+            </div>
+          ) : entries.map((entry) => (
             <div key={entry.id} className="bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -100,11 +104,13 @@ export default function ContentGrid({ entries }: ContentGridProps) {
         </div>
 
         {entries.length === 0 && (
+          !loading && (
           <div className="text-center py-12">
             <Video className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No content yet</h3>
             <p className="text-gray-600">Content entries will appear here once added to the research vault.</p>
           </div>
+          )
         )}
       </div>
     </section>

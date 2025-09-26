@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { AlertTriangle, Plus, Calendar, ExternalLink, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { useFirestoreCollection } from '../hooks/useFirestore';
 import { Correction } from '../types';
 
-interface CorrectionsProps {
-  corrections: Correction[];
-  onAddCorrection: (correction: Omit<Correction, 'id'>) => void;
-}
-
-export default function Corrections({ corrections, onAddCorrection }: CorrectionsProps) {
+export default function Corrections() {
+  const { data: corrections, loading, addItem: addCorrection } = useFirestoreCollection<Correction>('corrections');
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
     contentNumber: '',
@@ -21,11 +18,11 @@ export default function Corrections({ corrections, onAddCorrection }: Correction
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const correction: Omit<Correction, 'id'> = {
+    const correction = {
       ...formData,
       correctionDate: new Date().toISOString()
     };
-    onAddCorrection(correction);
+    addCorrection(correction);
     setFormData({
       contentNumber: '',
       title: '',
@@ -135,7 +132,12 @@ export default function Corrections({ corrections, onAddCorrection }: Correction
 
         {/* Corrections List */}
         <div className="space-y-6">
-          {corrections.map((correction) => (
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading corrections...</p>
+            </div>
+          ) : corrections.map((correction) => (
             <div key={correction.id} className="bg-white border border-gray-200 rounded-xl shadow-lg p-6">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
@@ -185,6 +187,7 @@ export default function Corrections({ corrections, onAddCorrection }: Correction
         </div>
 
         {corrections.length === 0 && (
+          !loading && (
           <div className="text-center py-12">
             <CheckCircle className="h-16 w-16 text-green-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No corrections needed</h3>
@@ -193,6 +196,7 @@ export default function Corrections({ corrections, onAddCorrection }: Correction
               This section will show any corrections when they're needed.
             </p>
           </div>
+          )
         )}
 
         {/* Add Correction Modal */}

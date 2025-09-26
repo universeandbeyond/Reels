@@ -15,7 +15,8 @@ export default function Header({ activeSection, setActiveSection }: HeaderProps)
     { id: 'content', label: 'Content' },
     { id: 'research', label: 'Research Vault' },
     { id: 'corrections', label: 'Corrections' },
-    { id: 'contact', label: 'Contact' }
+    { id: 'contact', label: 'Contact' },
+    { id: 'admin', label: 'Admin' }
   ];
 
   return (

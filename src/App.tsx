@@ -7,6 +7,7 @@ import ContentGrid from './components/ContentGrid';
 import ResearchVault from './components/ResearchVault';
 import Corrections from './components/Corrections';
 import Contact from './components/Contact';
+import AdminPanel from './components/AdminPanel';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { ResearchEntry, Correction } from './types';
 
@@ -50,6 +51,18 @@ function App() {
         return <Corrections corrections={corrections} onAddCorrection={addCorrection} />;
       case 'contact':
         return <Contact />;
+      case 'admin':
+        return (
+          <section className="py-20 bg-gray-50">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-8">
+                <h2 className="text-4xl font-bold text-gray-900 mb-4">Admin Panel</h2>
+                <p className="text-xl text-gray-600">Update your social media statistics</p>
+              </div>
+              <AdminPanel />
+            </div>
+          </section>
+        );
       default:
         return (
           <>
