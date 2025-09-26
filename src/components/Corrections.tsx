@@ -5,35 +5,6 @@ import { Correction } from '../types';
 
 export default function Corrections() {
   const { data: corrections, loading, addItem: addCorrection } = useFirestoreCollection<Correction>('corrections');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [formData, setFormData] = useState({
-    contentNumber: '',
-    title: '',
-    platform: 'youtube' as const,
-    mistakeDescription: '',
-    correction: '',
-    severity: 'minor' as const,
-    status: 'pending' as const
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const correction = {
-      ...formData,
-      correctionDate: new Date().toISOString()
-    };
-    addCorrection(correction);
-    setFormData({
-      contentNumber: '',
-      title: '',
-      platform: 'youtube',
-      mistakeDescription: '',
-      correction: '',
-      severity: 'minor',
-      status: 'pending'
-    });
-    setShowAddForm(false);
-  };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -65,20 +36,11 @@ export default function Corrections() {
   return (
     <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h2 className="text-4xl font-bold text-gray-900 mb-2">Corrections & Updates</h2>
-            <p className="text-xl text-gray-600">
-              Transparency in acknowledging and correcting mistakes
-            </p>
-          </div>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-colors"
-          >
-            <Plus className="h-5 w-5" />
-            <span>Add Correction</span>
-          </button>
+        <div className="text-center mb-8">
+          <h2 className="text-4xl font-bold text-gray-900 mb-2">Corrections & Updates</h2>
+          <p className="text-xl text-gray-600">
+            Transparency in acknowledging and correcting mistakes
+          </p>
         </div>
 
         {/* Statistics */}
@@ -199,141 +161,6 @@ export default function Corrections() {
           )
         )}
 
-        {/* Add Correction Modal */}
-        {showAddForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-2xl font-bold text-gray-900">Add Correction</h3>
-                <p className="text-gray-600 mt-1">Document a mistake and its correction</p>
-              </div>
-              
-              <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Content Number
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.contentNumber}
-                      onChange={(e) => setFormData(prev => ({ ...prev, contentNumber: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="e.g., YT001, FB002"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Platform
-                    </label>
-                    <select
-                      value={formData.platform}
-                      onChange={(e) => setFormData(prev => ({ ...prev, platform: e.target.value as any }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    >
-                      <option value="youtube">YouTube</option>
-                      <option value="facebook">Facebook</option>
-                      <option value="instagram">Instagram</option>
-                      <option value="tiktok">TikTok</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Content Title
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder="Title of the content with the mistake"
-                  />
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Severity
-                    </label>
-                    <select
-                      value={formData.severity}
-                      onChange={(e) => setFormData(prev => ({ ...prev, severity: e.target.value as any }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    >
-                      <option value="minor">Minor</option>
-                      <option value="moderate">Moderate</option>
-                      <option value="major">Major</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Status
-                    </label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="corrected">Corrected</option>
-                      <option value="acknowledged">Acknowledged</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mistake Description
-                  </label>
-                  <textarea
-                    required
-                    value={formData.mistakeDescription}
-                    onChange={(e) => setFormData(prev => ({ ...prev, mistakeDescription: e.target.value }))}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder="Describe what was incorrect in the original content..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Correction
-                  </label>
-                  <textarea
-                    required
-                    value={formData.correction}
-                    onChange={(e) => setFormData(prev => ({ ...prev, correction: e.target.value }))}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder="Provide the correct information..."
-                  />
-                </div>
-
-                <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddForm(false)}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                  >
-                    Add Correction
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );

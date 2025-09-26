@@ -5,28 +5,9 @@ import { ResearchEntry, Source } from '../types';
 
 export default function ResearchVault() {
   const { data: entries, loading, addItem: addEntry } = useFirestoreCollection<ResearchEntry>('research-entries');
-  const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPlatform, setFilterPlatform] = useState('all');
   const [selectedEntry, setSelectedEntry] = useState<ResearchEntry | null>(null);
-
-  const [formData, setFormData] = useState({
-    contentNumber: '',
-    title: '',
-    platform: 'youtube' as const,
-    contentType: 'video' as const,
-    description: '',
-    tags: '',
-    sources: [] as Omit<Source, 'id'>[]
-  });
-
-  const [newSource, setNewSource] = useState({
-    title: '',
-    url: '',
-    type: 'article' as const,
-    credibility: 'high' as const,
-    notes: ''
-  });
 
   const filteredEntries = entries.filter(entry => {
     const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -34,50 +15,6 @@ export default function ResearchVault() {
     const matchesPlatform = filterPlatform === 'all' || entry.platform === filterPlatform;
     return matchesSearch && matchesPlatform;
   });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const entry = {
-      ...formData,
-      sources: formData.sources.map(source => ({ ...source, id: Date.now().toString() + Math.random() })),
-      tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-      uploadDate: new Date().toISOString()
-    };
-    addEntry(entry);
-    setFormData({
-      contentNumber: '',
-      title: '',
-      platform: 'youtube',
-      contentType: 'video',
-      description: '',
-      tags: '',
-      sources: []
-    });
-    setShowAddForm(false);
-  };
-
-  const addSource = () => {
-    if (newSource.title && newSource.url) {
-      setFormData(prev => ({
-        ...prev,
-        sources: [...prev.sources, newSource]
-      }));
-      setNewSource({
-        title: '',
-        url: '',
-        type: 'article',
-        credibility: 'high',
-        notes: ''
-      });
-    }
-  };
-
-  const removeSource = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      sources: prev.sources.filter((_, i) => i !== index)
-    }));
-  };
 
   const getSourceIcon = (type: string) => {
     switch (type) {
@@ -101,20 +38,11 @@ export default function ResearchVault() {
   return (
     <section className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h2 className="text-4xl font-bold text-gray-900 mb-2">Research Vault</h2>
-            <p className="text-xl text-gray-600">
-              Transparent documentation of all research and sources
-            </p>
-          </div>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-colors"
-          >
-            <Plus className="h-5 w-5" />
-            <span>Add Entry</span>
-          </button>
+        <div className="text-center mb-8">
+          <h2 className="text-4xl font-bold text-gray-900 mb-2">Research Vault</h2>
+          <p className="text-xl text-gray-600">
+            Transparent documentation of all research and sources
+          </p>
         </div>
 
         {/* Search and Filter */}
@@ -213,199 +141,6 @@ export default function ResearchVault() {
             <p className="text-gray-600">Start by adding your first research entry.</p>
           </div>
           )
-        )}
-
-        {/* Add Entry Modal */}
-        {showAddForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-2xl font-bold text-gray-900">Add Research Entry</h3>
-              </div>
-              
-              <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Content Number
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.contentNumber}
-                      onChange={(e) => setFormData(prev => ({ ...prev, contentNumber: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="e.g., YT001, FB002"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Platform
-                    </label>
-                    <select
-                      value={formData.platform}
-                      onChange={(e) => setFormData(prev => ({ ...prev, platform: e.target.value as any }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="youtube">YouTube</option>
-                      <option value="facebook">Facebook</option>
-                      <option value="instagram">Instagram</option>
-                      <option value="tiktok">TikTok</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Content title"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Brief description of the content"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tags (comma-separated)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.tags}
-                    onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="space, astronomy, science"
-                  />
-                </div>
-
-                {/* Sources Section */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Sources</h4>
-                  
-                  {/* Add Source Form */}
-                  <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                    <div className="grid md:grid-cols-2 gap-4 mb-4">
-                      <input
-                        type="text"
-                        placeholder="Source title"
-                        value={newSource.title}
-                        onChange={(e) => setNewSource(prev => ({ ...prev, title: e.target.value }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <input
-                        type="url"
-                        placeholder="Source URL"
-                        value={newSource.url}
-                        onChange={(e) => setNewSource(prev => ({ ...prev, url: e.target.value }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    
-                    <div className="grid md:grid-cols-2 gap-4 mb-4">
-                      <select
-                        value={newSource.type}
-                        onChange={(e) => setNewSource(prev => ({ ...prev, type: e.target.value as any }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="article">Article</option>
-                        <option value="research_paper">Research Paper</option>
-                        <option value="website">Website</option>
-                        <option value="book">Book</option>
-                        <option value="video">Video</option>
-                        <option value="other">Other</option>
-                      </select>
-                      
-                      <select
-                        value={newSource.credibility}
-                        onChange={(e) => setNewSource(prev => ({ ...prev, credibility: e.target.value as any }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="high">High Credibility</option>
-                        <option value="medium">Medium Credibility</option>
-                        <option value="low">Low Credibility</option>
-                      </select>
-                    </div>
-                    
-                    <div className="mb-4">
-                      <textarea
-                        placeholder="Notes about this source (optional)"
-                        value={newSource.notes}
-                        onChange={(e) => setNewSource(prev => ({ ...prev, notes: e.target.value }))}
-                        rows={2}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    
-                    <button
-                      type="button"
-                      onClick={addSource}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    >
-                      Add Source
-                    </button>
-                  </div>
-
-                  {/* Sources List */}
-                  {formData.sources.length > 0 && (
-                    <div className="space-y-2 mb-4">
-                      {formData.sources.map((source, index) => (
-                        <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border">
-                          <div className="flex items-center space-x-3">
-                            {getSourceIcon(source.type)}
-                            <div>
-                              <p className="font-medium text-gray-900">{source.title}</p>
-                              <p className="text-sm text-gray-500">{source.url}</p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeSource(index)}
-                            className="text-red-600 hover:text-red-700 text-sm font-medium"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddForm(false)}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                  >
-                    Add Entry
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
         )}
 
         {/* Entry Details Modal */}
