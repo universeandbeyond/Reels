@@ -21,14 +21,15 @@ export default function Hero() {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h1 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
               Exploring the
               <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                 {' '}Universe
               </span>
-              <br />& Beyond
+              <br className="hidden sm:block" />
+              <span className="sm:hidden"> </span>& Beyond
             </h1>
-            <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+            <p className="text-lg sm:text-xl text-gray-300 mb-8 leading-relaxed">
               Welcome to my transparent content creation journey. Here you'll find all my research, 
               sources, and corrections for every video and reel I create across YouTube, Facebook, 
               Instagram, and TikTok.
@@ -89,7 +90,7 @@ export default function Hero() {
               <img 
                 src="/Photo.jpeg" 
                 alt="Content Creator" 
-                className="rounded-2xl shadow-2xl w-full max-w-xs mx-auto"
+                className="rounded-2xl shadow-2xl w-full max-w-[200px] sm:max-w-[250px] mx-auto"
               />
             </div>
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-3xl transform scale-110"></div>
