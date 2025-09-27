@@ -1,9 +1,21 @@
 import React, { useState } from 'react';
-import { Settings, Save, RefreshCw, Plus, BookOpen, AlertTriangle, FileText, Globe, Video, ExternalLink } from 'lucide-react';
+import { Settings, Save, RefreshCw, Plus, BookOpen, AlertTriangle, FileText, Globe, Video, ExternalLink, CheckCircle, X } from 'lucide-react';
 import { useFirestoreDocument } from '../hooks/useFirestore';
 import { useFirestoreCollection } from '../hooks/useFirestore';
 import { SocialStats, ResearchEntry, Correction, Source } from '../types';
 
+// Toast notification component
+const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => (
+  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center space-x-3 animate-slide-in-right ${
+    type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+  }`}>
+    {type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+    <span>{message}</span>
+    <button onClick={onClose} className="ml-2 hover:opacity-75">
+      <X className="h-4 w-4" />
+    </button>
+  </div>
+);
 export default function AdminPanel() {
   const { data: stats, loading, updateDocument } = useFirestoreDocument<SocialStats>('stats', 'social-stats');
   const { addItem: addEntry } = useFirestoreCollection<ResearchEntry>('research-entries');
@@ -12,6 +24,7 @@ export default function AdminPanel() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('stats');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   
   const [formData, setFormData] = useState({
     videos: stats?.videos || 0,
@@ -21,6 +34,10 @@ export default function AdminPanel() {
   });
   const [saving, setSaving] = useState(false);
 
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 5000);
+  };
   // Research Entry Form
   const [researchFormData, setResearchFormData] = useState({
     contentNumber: '',
@@ -67,8 +84,9 @@ export default function AdminPanel() {
     if (password === 'admin123') { // Default password
       setIsAuthenticated(true);
       setPassword('');
+      showToast('Successfully logged in!', 'success');
     } else {
-      alert('Incorrect password');
+      showToast('Incorrect password. Please try again.', 'error');
     }
   };
 
@@ -81,10 +99,10 @@ export default function AdminPanel() {
         ...formData,
         lastUpdated: new Date().toISOString()
       });
-      alert('Stats updated successfully!');
+      showToast('Social media stats updated successfully!', 'success');
     } catch (error) {
       console.error('Error updating stats:', error);
-      alert('Error updating stats. Check console for details.');
+      showToast('Error updating stats. Please try again.', 'error');
     } finally {
       setSaving(false);
     }
@@ -92,6 +110,7 @@ export default function AdminPanel() {
 
   const handleResearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    try {
     const entry = {
       ...researchFormData,
       sources: researchFormData.sources.map(source => ({ ...source, id: Date.now().toString() + Math.random() })),
@@ -108,11 +127,15 @@ export default function AdminPanel() {
       tags: '',
       sources: []
     });
-    alert('Research entry added successfully!');
+      showToast('Research entry added successfully!', 'success');
+    } catch (error) {
+      showToast('Error adding research entry. Please try again.', 'error');
+    }
   };
 
   const handleCorrectionSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    try {
     const correction = {
       ...correctionFormData,
       correctionDate: new Date().toISOString()
@@ -144,7 +167,10 @@ export default function AdminPanel() {
         notes: ''
       });
     }
-  };
+      showToast('Correction added successfully!', 'success');
+    } catch (error) {
+      showToast('Error adding correction. Please try again.', 'error');
+    }
 
   const removeSource = (index: number) => {
     setResearchFormData(prev => ({
@@ -160,14 +186,20 @@ export default function AdminPanel() {
       case 'website': return <Globe className="h-4 w-4" />;
       case 'video': return <Video className="h-4 w-4" />;
       default: return <FileText className="h-4 w-4" />;
+      showToast('Source added to entry!', 'success');
+    } else {
+      showToast('Please fill in source title and URL.', 'error');
     }
   };
 
   if (!isAuthenticated) {
     return (
       <div className="bg-white rounded-xl shadow-lg p-8 max-w-md mx-auto">
-        <div className="text-center mb-6">
+      <>
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md mx-auto animate-fade-in">
           <Settings className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+          <Settings className="h-12 w-12 text-blue-600 mx-auto mb-4 animate-spin-slow" />
           <h3 className="text-2xl font-bold text-gray-900">Admin Access</h3>
           <p className="text-gray-600">Enter password to access admin panel</p>
         </div>
@@ -181,44 +213,48 @@ export default function AdminPanel() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
               placeholder="Enter admin password"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg"
           >
             Login
           </button>
         </form>
-      </div>
+        </div>
+      </>
     );
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p className="ml-4 text-gray-600">Loading admin panel...</p>
       </div>
     );
   }
 
   return (
+    <>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-white rounded-xl shadow-lg p-6 animate-fade-in">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-3">
             <div className="bg-blue-100 p-3 rounded-lg">
-              <Settings className="h-6 w-6 text-blue-600" />
+              <Settings className="h-6 w-6 text-blue-600 animate-spin-slow" />
             </div>
             <h3 className="text-2xl font-bold text-gray-900">Admin Panel</h3>
           </div>
           <button
             onClick={() => setIsAuthenticated(false)}
-            className="text-gray-500 hover:text-gray-700 text-sm"
+            className="text-gray-500 hover:text-gray-700 text-sm transition-colors duration-300 hover:scale-105"
           >
             Logout
           </button>
@@ -226,12 +262,12 @@ export default function AdminPanel() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-lg">
+      <div className="bg-white rounded-xl shadow-lg animate-fade-in-up">
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
             <button
               onClick={() => setActiveTab('stats')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
                 activeTab === 'stats'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -241,7 +277,7 @@ export default function AdminPanel() {
             </button>
             <button
               onClick={() => setActiveTab('research')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
                 activeTab === 'research'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -251,7 +287,7 @@ export default function AdminPanel() {
             </button>
             <button
               onClick={() => setActiveTab('corrections')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
                 activeTab === 'corrections'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -265,7 +301,7 @@ export default function AdminPanel() {
         <div className="p-6">
           {/* Social Stats Tab */}
           {activeTab === 'stats' && (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -275,7 +311,7 @@ export default function AdminPanel() {
                     type="number"
                     value={formData.videos}
                     onChange={(e) => setFormData(prev => ({ ...prev, videos: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     placeholder="150"
                   />
                 </div>
@@ -288,7 +324,7 @@ export default function AdminPanel() {
                     type="number"
                     value={formData.followers}
                     onChange={(e) => setFormData(prev => ({ ...prev, followers: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     placeholder="50000"
                   />
                 </div>
@@ -303,7 +339,7 @@ export default function AdminPanel() {
                     type="number"
                     value={formData.views}
                     onChange={(e) => setFormData(prev => ({ ...prev, views: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     placeholder="2000000"
                   />
                 </div>
@@ -316,7 +352,7 @@ export default function AdminPanel() {
                     type="number"
                     value={formData.likes}
                     onChange={(e) => setFormData(prev => ({ ...prev, likes: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     placeholder="100000"
                   />
                 </div>
@@ -334,7 +370,7 @@ export default function AdminPanel() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors"
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all duration-300 hover:scale-105 hover:shadow-lg disabled:hover:scale-100"
               >
                 {saving ? (
                   <>
@@ -353,7 +389,7 @@ export default function AdminPanel() {
 
           {/* Research Entry Tab */}
           {activeTab === 'research' && (
-            <form onSubmit={handleResearchSubmit} className="space-y-6">
+            <form onSubmit={handleResearchSubmit} className="space-y-6 animate-fade-in">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -364,7 +400,7 @@ export default function AdminPanel() {
                     required
                     value={researchFormData.contentNumber}
                     onChange={(e) => setResearchFormData(prev => ({ ...prev, contentNumber: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     placeholder="e.g., YT001, FB002"
                   />
                 </div>
@@ -376,7 +412,7 @@ export default function AdminPanel() {
                   <select
                     value={researchFormData.platform}
                     onChange={(e) => setResearchFormData(prev => ({ ...prev, platform: e.target.value as any }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                   >
                     <option value="youtube">YouTube</option>
                     <option value="facebook">Facebook</option>
@@ -395,7 +431,7 @@ export default function AdminPanel() {
                   required
                   value={researchFormData.title}
                   onChange={(e) => setResearchFormData(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                   placeholder="Content title"
                 />
               </div>
@@ -408,7 +444,7 @@ export default function AdminPanel() {
                   value={researchFormData.description}
                   onChange={(e) => setResearchFormData(prev => ({ ...prev, description: e.target.value }))}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                   placeholder="Brief description of the content"
                 />
               </div>
@@ -421,7 +457,7 @@ export default function AdminPanel() {
                   type="text"
                   value={researchFormData.tags}
                   onChange={(e) => setResearchFormData(prev => ({ ...prev, tags: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                   placeholder="space, astronomy, science"
                 />
               </div>
@@ -431,21 +467,21 @@ export default function AdminPanel() {
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Sources</h4>
                 
                 {/* Add Source Form */}
-                <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                <div className="bg-gray-50 p-4 rounded-lg mb-4 animate-fade-in">
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <input
                       type="text"
                       placeholder="Source title"
                       value={newSource.title}
                       onChange={(e) => setNewSource(prev => ({ ...prev, title: e.target.value }))}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     />
                     <input
                       type="url"
                       placeholder="Source URL"
                       value={newSource.url}
                       onChange={(e) => setNewSource(prev => ({ ...prev, url: e.target.value }))}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     />
                   </div>
                   
@@ -453,7 +489,7 @@ export default function AdminPanel() {
                     <select
                       value={newSource.type}
                       onChange={(e) => setNewSource(prev => ({ ...prev, type: e.target.value as any }))}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     >
                       <option value="article">Article</option>
                       <option value="research_paper">Research Paper</option>
@@ -466,7 +502,7 @@ export default function AdminPanel() {
                     <select
                       value={newSource.credibility}
                       onChange={(e) => setNewSource(prev => ({ ...prev, credibility: e.target.value as any }))}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     >
                       <option value="high">High Credibility</option>
                       <option value="medium">Medium Credibility</option>
@@ -480,14 +516,14 @@ export default function AdminPanel() {
                       value={newSource.notes}
                       onChange={(e) => setNewSource(prev => ({ ...prev, notes: e.target.value }))}
                       rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     />
                   </div>
                   
                   <button
                     type="button"
                     onClick={addSource}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg"
                   >
                     Add Source
                   </button>
@@ -497,7 +533,7 @@ export default function AdminPanel() {
                 {researchFormData.sources.length > 0 && (
                   <div className="space-y-2 mb-4">
                     {researchFormData.sources.map((source, index) => (
-                      <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border">
+                      <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border animate-slide-in-left hover:shadow-md transition-shadow duration-300">
                         <div className="flex items-center space-x-3">
                           {getSourceIcon(source.type)}
                           <div>
@@ -508,7 +544,7 @@ export default function AdminPanel() {
                         <button
                           type="button"
                           onClick={() => removeSource(index)}
-                          className="text-red-600 hover:text-red-700 text-sm font-medium"
+                          className="text-red-600 hover:text-red-700 text-sm font-medium transition-colors duration-300 hover:scale-110"
                         >
                           Remove
                         </button>
@@ -520,7 +556,7 @@ export default function AdminPanel() {
 
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all duration-300 hover:scale-105 hover:shadow-lg"
               >
                 <Plus className="h-5 w-5" />
                 <span>Add Research Entry</span>
@@ -530,7 +566,7 @@ export default function AdminPanel() {
 
           {/* Corrections Tab */}
           {activeTab === 'corrections' && (
-            <form onSubmit={handleCorrectionSubmit} className="space-y-6">
+            <form onSubmit={handleCorrectionSubmit} className="space-y-6 animate-fade-in">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -541,7 +577,7 @@ export default function AdminPanel() {
                     required
                     value={correctionFormData.contentNumber}
                     onChange={(e) => setCorrectionFormData(prev => ({ ...prev, contentNumber: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
                     placeholder="e.g., YT001, FB002"
                   />
                 </div>
@@ -553,7 +589,7 @@ export default function AdminPanel() {
                   <select
                     value={correctionFormData.platform}
                     onChange={(e) => setCorrectionFormData(prev => ({ ...prev, platform: e.target.value as any }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
                   >
                     <option value="youtube">YouTube</option>
                     <option value="facebook">Facebook</option>
@@ -572,7 +608,7 @@ export default function AdminPanel() {
                   required
                   value={correctionFormData.title}
                   onChange={(e) => setCorrectionFormData(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
                   placeholder="Title of the content with the mistake"
                 />
               </div>
@@ -585,7 +621,7 @@ export default function AdminPanel() {
                   <select
                     value={correctionFormData.severity}
                     onChange={(e) => setCorrectionFormData(prev => ({ ...prev, severity: e.target.value as any }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
                   >
                     <option value="minor">Minor</option>
                     <option value="moderate">Moderate</option>
@@ -600,7 +636,7 @@ export default function AdminPanel() {
                   <select
                     value={correctionFormData.status}
                     onChange={(e) => setCorrectionFormData(prev => ({ ...prev, status: e.target.value as any }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
                   >
                     <option value="pending">Pending</option>
                     <option value="corrected">Corrected</option>
@@ -618,7 +654,7 @@ export default function AdminPanel() {
                   value={correctionFormData.mistakeDescription}
                   onChange={(e) => setCorrectionFormData(prev => ({ ...prev, mistakeDescription: e.target.value }))}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
                   placeholder="Describe what was incorrect in the original content..."
                 />
               </div>
@@ -632,14 +668,14 @@ export default function AdminPanel() {
                   value={correctionFormData.correction}
                   onChange={(e) => setCorrectionFormData(prev => ({ ...prev, correction: e.target.value }))}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
                   placeholder="Provide the correct information..."
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors"
+                className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all duration-300 hover:scale-105 hover:shadow-lg"
               >
                 <AlertTriangle className="h-5 w-5" />
                 <span>Add Correction</span>
@@ -649,5 +685,6 @@ export default function AdminPanel() {
         </div>
       </div>
     </div>
+    </>
   );
 }

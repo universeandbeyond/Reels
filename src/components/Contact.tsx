@@ -14,6 +14,8 @@ export default function Contact() {
     e.preventDefault();
     // Handle form submission
     console.log('Form submitted:', formData);
+    // Show success message
+    alert('Message sent successfully! We\'ll get back to you within 24-48 hours.');
     // Reset form
     setFormData({
       name: '',
@@ -160,7 +162,7 @@ export default function Contact() {
 
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all duration-300 hover:scale-105 hover:shadow-lg"
               >
                 <Send className="h-5 w-5" />
                 <span>Send Message</span>
