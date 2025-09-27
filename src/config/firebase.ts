@@ -1,23 +1,31 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
 
+// Replace these with your actual Firebase config values
 const firebaseConfig = {
-  apiKey: "AIzaSyBpZQiQ9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q",
+  apiKey: "your-api-key-here",
   authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
+  projectId: "your-project-id-here",
   storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef123456789"
+  messagingSenderId: "your-sender-id",
+  appId: "your-app-id"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app;
+let db;
 
-// Initialize Firestore
-export const db = getFirestore(app);
+try {
+  // Initialize Firebase
+  app = initializeApp(firebaseConfig);
+  // Initialize Firestore
+  db = getFirestore(app);
+  console.log('Firebase initialized successfully');
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+  // Firebase will be null if initialization fails
+  db = null;
+}
 
-// Initialize Auth
-export const auth = getAuth(app);
+export { db };
 
 export default app;

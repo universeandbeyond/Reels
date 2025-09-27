@@ -76,12 +76,15 @@ export default function AdminPanel() {
     e.preventDefault();
     setSaving(true);
     try {
+      console.log('Updating stats:', formData);
       await updateDocument({
         ...formData,
         lastUpdated: new Date().toISOString()
       });
+      alert('Stats updated successfully!');
     } catch (error) {
       console.error('Error updating stats:', error);
+      alert('Error updating stats. Check console for details.');
     } finally {
       setSaving(false);
     }
