@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, BarChart3, FileText, AlertTriangle, Plus, X, Loader2 } from 'lucide-react';
-import { useFirestore } from '../hooks/useFirestore';
+import { useFirestoreCollection, useFirestoreDocument } from '../hooks/useFirestore';
+import { ResearchEntry, Correction, SocialStats } from '../types';
 
 interface ToastProps {
   message: string;
@@ -60,7 +61,9 @@ export const AdminPanel: React.FC = () => {
     source: ''
   });
 
-  const { updateStats, addResearchEntry, addCorrection } = useFirestore();
+  const { updateDocument: updateStats } = useFirestoreDocument<SocialStats>('stats', 'social-stats');
+  const { addItem: addResearchEntry } = useFirestoreCollection<ResearchEntry>('research-entries');
+  const { addItem: addCorrection } = useFirestoreCollection<Correction>('corrections');
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
