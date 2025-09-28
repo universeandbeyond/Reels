@@ -31,7 +31,7 @@ export default function Header({ activeSection, setActiveSection }: HeaderProps)
             />
             <div>
               <h1 className="text-xl font-bold text-gray-900">Universe & Beyond</h1>
-              <p className="text-sm text-gray-600">Content Creator Portfolio</p>
+              <p className="text-sm text-gray-600">By Shankar Neupane</p>
             </div>
           </div>
 
